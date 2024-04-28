@@ -5,6 +5,7 @@
  */
 
 #include "mm.h"
+#include <stdio.h>
 #include <stdlib.h>
 
 /*
@@ -160,8 +161,10 @@ int MEMPHY_dump(struct memphy_struct * mp)
     /*TODO dump memphy contnt mp->storage 
      *     for tracing the memory content
      */
-
-    return 0;
+   for(int i = 0; i < mp->maxsz; i++){
+      printf("index: %d : %d\n", i, mp->storage[i]);
+   }
+   return 0;
 }
 
 int MEMPHY_put_freefp(struct memphy_struct *mp, int fpn)

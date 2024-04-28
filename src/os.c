@@ -48,6 +48,8 @@ struct cpu_args {
 
 
 static void * cpu_routine(void * args) {
+	//TODO: 
+	printf("cpu routine\n");
 	struct timer_id_t * timer_id = ((struct cpu_args*)args)->timer_id;
 	int id = ((struct cpu_args*)args)->id;
 	/* Check for new process in ready queue */
@@ -58,6 +60,8 @@ static void * cpu_routine(void * args) {
 		if (proc == NULL) {
 			/* No process is running, the we load new process from
 		 	* ready queue */
+			//TODO: 
+			printf("Inside while(1) at if block proc == NULL");
 			proc = get_proc();
 			if (proc == NULL) {
                            next_slot(timer_id);
@@ -109,25 +113,36 @@ static void * ld_routine(void * args) {
 	struct memphy_struct** mswp = ((struct mmpaging_ld_args *)args)->mswp;
 	struct memphy_struct* active_mswp = ((struct mmpaging_ld_args *)args)->active_mswp;
 	struct timer_id_t * timer_id = ((struct mmpaging_ld_args *)args)->timer_id;
+	struct memphy_struct * tlb = ((struct mmpaging_ld_args *)args)->tlb;
 #else
 	struct timer_id_t * timer_id = (struct timer_id_t*)args;
 #endif
 	int i = 0;
+		
 	printf("ld_routine\n");
 	while (i < num_processes) {
+		//TODO: 
 		struct pcb_t * proc = load(ld_processes.path[i]);
 #ifdef MLQ_SCHED
 		proc->prio = ld_processes.prio[i];
 #endif
+		
+		printf("%ld\n", ld_processes.start_time[i]);
+		printf("%ld\n", current_time());
+		printf("Printing before while current time()\n");
+		
 		while (current_time() < ld_processes.start_time[i]) {
 			next_slot(timer_id);
 		}
+		//TODO: 
+		printf("Printing after while current time()\n");
 #ifdef MM_PAGING
 		proc->mm = malloc(sizeof(struct mm_struct));
 		init_mm(proc->mm, proc);
 		proc->mram = mram;
 		proc->mswp = mswp;
 		proc->active_mswp = active_mswp;
+		proc->tlb = tlb;
 #endif
 		printf("\tLoaded a process at %s, PID: %d PRIO: %ld\n",
 			ld_processes.path[i], proc->pid, ld_processes.prio[i]);

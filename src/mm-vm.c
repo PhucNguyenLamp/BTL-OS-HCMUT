@@ -172,45 +172,48 @@ int pgfree_data(struct pcb_t *proc, uint32_t reg_index)
 int pg_getpage(struct mm_struct *mm, int pgn, int *fpn, struct pcb_t *caller)
 {
   uint32_t pte = mm->pgd[pgn];
- 
+  if(pte < 0){
+    return -1;
+  }
+  
   if (!PAGING_PAGE_PRESENT(pte))
   { /* Page is not online, make it actively living */
     int vicpgn, swpfpn; 
-    //int vicfpn;
-    //uint32_t vicpte;
+    int vicfpn;
+    uint32_t vicpte;
 
     int tgtfpn = PAGING_SWP(pte);//the target frame storing our variable
 
     /* TODO: Play with your paging theory here */
     /* Find victim page */
     find_victim_page(caller->mm, &vicpgn);
+    vicpte = mm->pgd[vicpgn];
+    vicfpn = PAGING_FPN(vicpte);
 
     /* Get free frame in MEMSWP */
     MEMPHY_get_freefp(caller->active_mswp, &swpfpn);
 
-
     /* Do swap frame from MEMRAM to MEMSWP and vice versa*/
     /* Copy victim frame to swap */
-    //__swap_cp_page();
+    __swap_cp_page(caller->mram, vicfpn, caller->active_mswp, swpfpn);
     /* Copy target frame from swap to mem */
-    //__swap_cp_page();
+    __swap_cp_page(caller->active_mswp, tgtfpn, caller->mram, vicfpn);
+
+    MEMPHY_put_freefp(caller->active_mswp, tgtfpn); 
 
     /* Update page table */
-    //pte_set_swap() &mm->pgd;
+    pte_set_swap(&mm->pgd[vicpgn], 0, swpfpn);
 
     /* Update its online status of the target page */
-    //pte_set_fpn() & mm->pgd[pgn];
-    pte_set_fpn(&pte, tgtfpn);
+    pte_set_fpn(&mm->pgd[pgn], tgtfpn);
 
 #ifdef CPU_TLB
-    /* Update its online status of TLB (if needed) */
+    /* Update its online status of TLB (if needed) */ 
 #endif
 
     enlist_pgn_node(&caller->mm->fifo_pgn,pgn);
   }
-
   *fpn = PAGING_FPN(pte);
-
   return 0;
 }
 
@@ -282,7 +285,6 @@ int __read(struct pcb_t *caller, int vmaid, int rgid, int offset, BYTE *data)
   return 0;
 }
 
-
 /*pgwrite - PAGING-based read a region memory */
 int pgread(
 		struct pcb_t * proc, // Process executing the instruction
@@ -345,7 +347,6 @@ int pgwrite(
   return __write(proc, 0, destination, offset, data);
 }
 
-
 /*free_pcb_memphy - collect all memphy of pcb
  *@caller: caller
  *@vmaid: ID vm area to alloc memory region
@@ -373,7 +374,6 @@ int free_pcb_memph(struct pcb_t *caller)
 
   return 0;
 }
-
 /*get_vm_area_node - get vm area for a number of pages
  *@caller: caller
  *@vmaid: ID vm area to alloc memory region
@@ -450,11 +450,21 @@ int inc_vma_limit(struct pcb_t *caller, int vmaid, int inc_sz)
 int find_victim_page(struct mm_struct *mm, int *retpgn) 
 {
   struct pgn_t *pg = mm->fifo_pgn;
-
+  if(!pg) return -1;
+  if(!pg->pg_next){   // 1 FRAME ONLY !!! 
+    *retpgn = pg->pgn;
+    free(pg);
+    return 0;
+  }
+  struct pgn_t *prev_pg = mm->fifo_pgn; 
   /* TODO: Implement the theorical mechanism to find the victim page */
-
+  while(pg->pg_next) {
+    prev_pg = pg;
+    pg = pg -> pg_next;
+  }
+  *retpgn = pg->pgn;
+  prev_pg->pg_next = NULL; 
   free(pg);
-
   return 0;
 }
 

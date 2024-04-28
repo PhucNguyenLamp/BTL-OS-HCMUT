@@ -2,7 +2,6 @@
 #include "cpu.h"
 #include "mem.h"
 #include "mm.h"
-
 int calc(struct pcb_t * proc) {
 	return ((unsigned long)proc & 0UL);
 }
