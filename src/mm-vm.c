@@ -107,6 +107,7 @@ int __alloc(struct pcb_t *caller, int vmaid, int rgid, int size, int *alloc_addr
    * inc_vma_limit(caller, vmaid, inc_sz)
    */
   inc_vma_limit(caller, vmaid, inc_sz);
+ 
   // update vm_freerg_list
   if(inc_sz > size){
     struct vm_rg_struct *rgnode = malloc(sizeof(struct vm_rg_struct));
@@ -115,7 +116,7 @@ int __alloc(struct pcb_t *caller, int vmaid, int rgid, int size, int *alloc_addr
     enlist_vm_freerg_list(caller->mm, rgnode);
   }
   cur_vma->sbrk += inc_sz;
-  printf("########## sbrk: %ld\n", cur_vma->sbrk);
+  // printf("########## sbrk: %ld\n", cur_vma->sbrk);
   /*Successful increase limit */
   caller->mm->symrgtbl[rgid].rg_start = old_sbrk;
   caller->mm->symrgtbl[rgid].rg_end = old_sbrk + size;
@@ -182,6 +183,7 @@ int pgfree_data(struct pcb_t *proc, uint32_t reg_index)
 int pg_getpage(struct mm_struct *mm, int pgn, int *fpn, struct pcb_t *caller)
 {
   uint32_t pte = mm->pgd[pgn];
+  // printf("pte: %d\n", pte);
   if(pte < 0){
     return -1;
   }
@@ -192,13 +194,13 @@ int pg_getpage(struct mm_struct *mm, int pgn, int *fpn, struct pcb_t *caller)
     int vicfpn;
     uint32_t vicpte;
 
-    int tgtfpn = PAGING_SWP(pte);//the target frame storing our variable
+    int tgtfpn = GETVAL(pte, PAGING_PTE_FPN_MASK,PAGING_PTE_FPN_LOBIT);//the target frame storing our variable
 
     /* TODO: Play with your paging theory here */
     /* Find victim page */
     find_victim_page(caller->mm, &vicpgn);
     vicpte = mm->pgd[vicpgn];
-    vicfpn = PAGING_FPN(vicpte);
+    vicfpn = GETVAL(vicpte, PAGING_PTE_FPN_MASK,PAGING_PTE_FPN_LOBIT);
 
     /* Get free frame in MEMSWP */
     MEMPHY_get_freefp(caller->active_mswp, &swpfpn);
@@ -223,7 +225,9 @@ int pg_getpage(struct mm_struct *mm, int pgn, int *fpn, struct pcb_t *caller)
 
     enlist_pgn_node(&caller->mm->fifo_pgn,pgn);
   }
-  *fpn = PAGING_FPN(pte);
+  // *fpn = PAGING_FPN(pte);
+  *fpn = GETVAL(pte, PAGING_PTE_FPN_MASK,PAGING_PTE_FPN_LOBIT);
+  // printf("Frame number inside pg_getpage %d\n", *fpn);
   return 0;
 }
 
@@ -267,6 +271,7 @@ int pg_setval(struct mm_struct *mm, int addr, BYTE value, struct pcb_t *caller)
     return -1; /* invalid page access */
 
   int phyaddr = (fpn << PAGING_ADDR_FPN_LOBIT) + off;
+  printf("Inside pg_setval, fpn: %d, phyaddr: %u\n", fpn, phyaddr);
 
   MEMPHY_write(caller->mram,phyaddr, value);
 
@@ -291,6 +296,7 @@ int __read(struct pcb_t *caller, int vmaid, int rgid, int offset, BYTE *data)
 	  return -1;
 
   pg_getval(caller->mm, currg->rg_start + offset, data, caller);
+  
 
   return 0;
 }
@@ -448,6 +454,8 @@ int inc_vma_limit(struct pcb_t *caller, int vmaid, int inc_sz)
                     old_end, incnumpage , newrg) < 0)
     return -1; /* Map the memory to MEMRAM */
 
+  
+
   return 0;
 
 }
@@ -489,11 +497,11 @@ int get_free_vmrg_area(struct pcb_t *caller, int vmaid, int size, struct vm_rg_s
   struct vm_area_struct *cur_vma = get_vma_by_num(caller->mm, vmaid);
 
   struct vm_rg_struct *rgit = cur_vma->vm_freerg_list;
-  struct vm_rg_struct *temp = rgit;
-  while (temp!=NULL){
-    printf("rgit->rg_start: %ld, rgit->rg_end: %ld\n", temp->rg_start, temp->rg_end);
-    temp = temp->rg_next;
-  }
+  // struct vm_rg_struct *temp = rgit;
+  // while (temp!=NULL){
+  //   printf("rgit->rg_start: %ld, rgit->rg_end: %ld\n", temp->rg_start, temp->rg_end);
+  //   temp = temp->rg_next;
+  // }
   if (rgit == NULL)
     return -1;
 

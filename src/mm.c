@@ -110,12 +110,15 @@ int vmap_page_range(struct pcb_t *caller, // process call
   {
     fpit = fpit->fp_next;
     fpn = fpit->fpn;
+    // printf("Inide while loop of vmap_page_range: fpn: %d\n", fpn);
     caller->mm->pgd[pgn + pgit] = 0;
     pte_set_fpn(&caller->mm->pgd[pgn+pgit], fpn);
+    
     //* set pte bit present = 1.
     enlist_pgn_node(&caller->mm->fifo_pgn, pgn+pgit);
     //* contains used frame number.
     //* head: moi nhat, tail: cu nhat
+    // printf("Caller->mm->[%d+%d]: %d\n", pgn, pgit, fpn);
 
     if(pgit == pgnum)
     {
@@ -210,6 +213,9 @@ int vm_map_ram(struct pcb_t *caller, int astart, int aend, int mapstart, int inc
   /* it leaves the case of memory is enough but half in ram, half in swap
    * do the swaping all to swapper to get the all in ram */
   vmap_page_range(caller, mapstart, incpgnum, frm_lst, ret_rg);
+
+  
+  
 
   return 0;
 }
