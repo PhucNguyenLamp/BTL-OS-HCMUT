@@ -106,6 +106,7 @@ int __alloc(struct pcb_t *caller, int vmaid, int rgid, int size, int *alloc_addr
   /* TODO INCREASE THE LIMIT
    * inc_vma_limit(caller, vmaid, inc_sz)
    */
+  
   inc_vma_limit(caller, vmaid, inc_sz);
  
   // update vm_freerg_list
