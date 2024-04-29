@@ -2,7 +2,10 @@
 #include "cpu.h"
 #include "mem.h"
 #include "mm.h"
+#include <stdio.h>
 int calc(struct pcb_t * proc) {
+	//* DEBUGPRINT
+	printf("Proc %d in calc\n", proc->pid);
 	return ((unsigned long)proc & 0UL);
 }
 

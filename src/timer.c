@@ -20,7 +20,7 @@ static int timer_stop = 0;
 
 static void * timer_routine(void * args) {
 	while (!timer_stop) {
-		printf("Time slot %3lu\n", current_time());
+		printf("\n\nTime slot %3lu\n", current_time());
 		int fsh = 0;
 		int event = 0;
 		/* Wait for all devices have done the job in current

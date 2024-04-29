@@ -58,9 +58,7 @@ static void * cpu_routine(void * args) {
 		/* Check the status of current process */
 		if (proc == NULL) {
 			/* No process is running, the we load new process from
-		 	* ready queue */
-			//TODO: 
-			
+		 	* ready queue */			
 			proc = get_proc();
 			if (proc == NULL) {
                            next_slot(timer_id);
@@ -99,7 +97,7 @@ static void * cpu_routine(void * args) {
 		
 		/* Run current process */
 		//DEBUGPRINT:
-		printf("\nProc about to run: %d\n", proc->pid);
+		// printf("\nProc about to run: %d\n", proc->pid);
 		run(proc);
 		time_left--;
 		next_slot(timer_id);
@@ -122,7 +120,6 @@ static void * ld_routine(void * args) {
 		
 	printf("ld_routine\n");
 	while (i < num_processes) {
-		//TODO: 
 		struct pcb_t * proc = load(ld_processes.path[i]);
 #ifdef MLQ_SCHED
 		proc->prio = ld_processes.prio[i];

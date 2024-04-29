@@ -82,7 +82,6 @@ int __alloc(struct pcb_t *caller, int vmaid, int rgid, int size, int *alloc_addr
 {
   /*Allocate at the toproof */
   struct vm_rg_struct rgnode;
-  // //DEBUGPRINT
   // printf("Proc %d in __alloc, before get_free_vmrg_area\n", caller->pid);
   if (get_free_vmrg_area(caller, vmaid, size, &rgnode) == 0)
   {
@@ -100,21 +99,27 @@ int __alloc(struct pcb_t *caller, int vmaid, int rgid, int size, int *alloc_addr
   struct vm_area_struct *cur_vma = get_vma_by_num(caller->mm, vmaid);
   int inc_sz = PAGING_PAGE_ALIGNSZ(size);
   //int inc_limit_ret
+  
   int old_sbrk ;
-
   old_sbrk = cur_vma->sbrk;
 
   /* TODO INCREASE THE LIMIT
    * inc_vma_limit(caller, vmaid, inc_sz)
    */
- 
   inc_vma_limit(caller, vmaid, inc_sz);
-  
-
+  // update vm_freerg_list
+  if(inc_sz > size){
+    struct vm_rg_struct *rgnode = malloc(sizeof(struct vm_rg_struct));
+    rgnode->rg_start = size + old_sbrk; 
+    rgnode->rg_end = inc_sz + old_sbrk;
+    enlist_vm_freerg_list(caller->mm, *rgnode);
+  }
+  cur_vma->sbrk += inc_sz;
+  printf("########## sbrk: %ld\n", cur_vma->sbrk);
   /*Successful increase limit */
   caller->mm->symrgtbl[rgid].rg_start = old_sbrk;
   caller->mm->symrgtbl[rgid].rg_end = old_sbrk + size;
-
+  
   *alloc_addr = old_sbrk;
 
   return 0;
@@ -135,10 +140,11 @@ int __free(struct pcb_t *caller, int vmaid, int rgid)
     return -1;
 
   /* TODO: Manage the collect freed region to freerg_list */
+  
   rgnode = caller->mm->symrgtbl[rgid];
   /*enlist the obsoleted memory region */
-  enlist_vm_freerg_list(caller->mm, rgnode);
 
+  enlist_vm_freerg_list(caller->mm, rgnode);
   return 0;
 }
 
@@ -483,7 +489,11 @@ int get_free_vmrg_area(struct pcb_t *caller, int vmaid, int size, struct vm_rg_s
   struct vm_area_struct *cur_vma = get_vma_by_num(caller->mm, vmaid);
 
   struct vm_rg_struct *rgit = cur_vma->vm_freerg_list;
-
+  struct vm_rg_struct *temp = rgit;
+  while (temp!=NULL){
+    printf("rgit->rg_start: %ld, rgit->rg_end: %ld\n", temp->rg_start, temp->rg_end);
+    temp = temp->rg_next;
+  }
   if (rgit == NULL)
     return -1;
 
@@ -507,7 +517,6 @@ int get_free_vmrg_area(struct pcb_t *caller, int vmaid, int size, struct vm_rg_s
       {
         rgit->rg_start = rgit->rg_start + size;
         // printf("Inside while loop of get_free_vmrg_area, inside the if block, insode the update if rgit->rg_start\n");
-        
       }
       else
       { /*Use up all space, remove current node */
