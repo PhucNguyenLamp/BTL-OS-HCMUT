@@ -152,7 +152,7 @@ int alloc_pages_range(struct pcb_t *caller, int req_pgnum, struct framephy_struc
   struct framephy_struct *temp = newfp_str;
 
   for(pgit = 0; pgit < req_pgnum; pgit++)
-  {
+  { 
     if(MEMPHY_get_freefp(caller->mram, &fpn) == 0)
     {
       temp->fp_next = malloc(sizeof(struct framephy_struct));
@@ -189,6 +189,7 @@ int vm_map_ram(struct pcb_t *caller, int astart, int aend, int mapstart, int inc
   struct framephy_struct *frm_lst = NULL;
   int ret_alloc;
 
+
   /*@bksysnet: author provides a feasible solution of getting frames
    *FATAL logic in here, wrong behaviour if we have not enough page
    *i.e. we request 1000 frames meanwhile our RAM has size of 3 frames
@@ -197,17 +198,42 @@ int vm_map_ram(struct pcb_t *caller, int astart, int aend, int mapstart, int inc
    *duplicate control mechanism, keep it simple
    */
   ret_alloc = alloc_pages_range(caller, incpgnum, &frm_lst);
+  printf("ret allocation status: %d\n", ret_alloc);
 
   if (ret_alloc < 0 && ret_alloc != -3000)
     return -1;
 
-  /* Out of memory */
+  /* Out of memory  */
   if (ret_alloc == -3000) 
   {
 #ifdef MMDBG
      printf("OOM: vm_map_ram out of memory \n");
 #endif
-     return -1;
+    int i = 0;
+    while(i < incpgnum){
+      int vicpgn, swpfpn;
+      int vicfpn;
+      uint32_t vicpte;
+      find_victim_page(caller->mm, &vicpgn);
+      
+      vicpte = caller->mm->pgd[vicpgn];
+      vicfpn = GETVAL(vicpte, PAGING_PTE_FPN_MASK,PAGING_PTE_FPN_LOBIT);
+
+      MEMPHY_get_freefp(caller->active_mswp, &swpfpn);
+      __swap_cp_page(caller->mram, vicfpn, caller->active_mswp, swpfpn);
+
+      pte_set_swap(&caller->mm->pgd[vicpgn], 0, swpfpn);
+      
+
+      MEMPHY_put_freefp(caller->mram, vicfpn);
+      printf("alloc pages range in ret_alloc -3000\n");
+      printf("incpgnum: %d\n", incpgnum);
+      i++;
+    }
+    
+    
+    ret_alloc = alloc_pages_range(caller, incpgnum, &frm_lst);
+
   }
 
   /* it leaves the case of memory is enough but half in ram, half in swap
