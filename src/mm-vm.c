@@ -15,18 +15,18 @@
  *@rg_elmt: new region
  *
  */
-int enlist_vm_freerg_list(struct mm_struct *mm, struct vm_rg_struct rg_elmt)
+int enlist_vm_freerg_list(struct mm_struct *mm, struct vm_rg_struct *rg_elmt)
 {
   struct vm_rg_struct *rg_node = mm->mmap->vm_freerg_list;
 
-  if (rg_elmt.rg_start >= rg_elmt.rg_end)
+  if (rg_elmt->rg_start >= rg_elmt->rg_end)
     return -1;
 
   if (rg_node != NULL)
-    rg_elmt.rg_next = rg_node;
+    rg_elmt->rg_next = rg_node;
 
   /* Enlist the new region */
-  mm->mmap->vm_freerg_list = &rg_elmt;
+  mm->mmap->vm_freerg_list = rg_elmt;
 
   return 0;
 }
@@ -110,9 +110,9 @@ int __alloc(struct pcb_t *caller, int vmaid, int rgid, int size, int *alloc_addr
   // update vm_freerg_list
   if(inc_sz > size){
     struct vm_rg_struct *rgnode = malloc(sizeof(struct vm_rg_struct));
-    rgnode->rg_start = size + old_sbrk; 
+    rgnode->rg_start = size + old_sbrk + 1; 
     rgnode->rg_end = inc_sz + old_sbrk;
-    enlist_vm_freerg_list(caller->mm, *rgnode);
+    enlist_vm_freerg_list(caller->mm, rgnode);
   }
   cur_vma->sbrk += inc_sz;
   printf("########## sbrk: %ld\n", cur_vma->sbrk);
@@ -144,7 +144,7 @@ int __free(struct pcb_t *caller, int vmaid, int rgid)
   rgnode = caller->mm->symrgtbl[rgid];
   /*enlist the obsoleted memory region */
 
-  enlist_vm_freerg_list(caller->mm, rgnode);
+  enlist_vm_freerg_list(caller->mm, &rgnode);
   return 0;
 }
 
