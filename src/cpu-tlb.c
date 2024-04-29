@@ -51,7 +51,7 @@ int tlballoc(struct pcb_t *proc, uint32_t size, uint32_t reg_index)
 
   /* By default using vmaid = 0 */
   val = __alloc(proc, 0, reg_index, size, &addr);
-  printf("Proc %d in tlballoc, after RAMALLOCATION\n", proc->pid);
+  // printf("Proc %d in tlballoc, after RAMALLOCATION\n", proc->pid);
   /* TODO update TLB CACHED frame num of the new allocated page(s)*/
   /* by using tlb_cache_read()/tlb_cache_write()*/
   int page_number = PAGING_PGN(addr);

@@ -82,8 +82,8 @@ int __alloc(struct pcb_t *caller, int vmaid, int rgid, int size, int *alloc_addr
 {
   /*Allocate at the toproof */
   struct vm_rg_struct rgnode;
-  //DEBUGPRINT
-  printf("Proc %d in __alloc, before get_free_vmrg_area\n", caller->pid);
+  // //DEBUGPRINT
+  // printf("Proc %d in __alloc, before get_free_vmrg_area\n", caller->pid);
   if (get_free_vmrg_area(caller, vmaid, size, &rgnode) == 0)
   {
     caller->mm->symrgtbl[rgid].rg_start = rgnode.rg_start;
