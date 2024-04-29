@@ -6,6 +6,7 @@
 
 #include "string.h"
 #include "mm.h"
+#include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -81,7 +82,8 @@ int __alloc(struct pcb_t *caller, int vmaid, int rgid, int size, int *alloc_addr
 {
   /*Allocate at the toproof */
   struct vm_rg_struct rgnode;
-
+  // //DEBUGPRINT
+  // printf("Proc %d in __alloc, before get_free_vmrg_area\n", caller->pid);
   if (get_free_vmrg_area(caller, vmaid, size, &rgnode) == 0)
   {
     caller->mm->symrgtbl[rgid].rg_start = rgnode.rg_start;
@@ -105,7 +107,9 @@ int __alloc(struct pcb_t *caller, int vmaid, int rgid, int size, int *alloc_addr
   /* TODO INCREASE THE LIMIT
    * inc_vma_limit(caller, vmaid, inc_sz)
    */
+ 
   inc_vma_limit(caller, vmaid, inc_sz);
+  
 
   /*Successful increase limit */
   caller->mm->symrgtbl[rgid].rg_start = old_sbrk;
@@ -131,7 +135,7 @@ int __free(struct pcb_t *caller, int vmaid, int rgid)
     return -1;
 
   /* TODO: Manage the collect freed region to freerg_list */
-
+  rgnode = caller->mm->symrgtbl[rgid];
   /*enlist the obsoleted memory region */
   enlist_vm_freerg_list(caller->mm, rgnode);
 
@@ -489,8 +493,12 @@ int get_free_vmrg_area(struct pcb_t *caller, int vmaid, int size, struct vm_rg_s
   /* Traverse on list of free vm region to find a fit space */
   while (rgit != NULL)
   {
+    // sleep(1);
     if (rgit->rg_start + size <= rgit->rg_end)
     { /* Current region has enough space */
+
+      // //DEBUGPRINT
+      // printf("Inside while loop of get_free_vmrg_area, inside the if block\n");
       newrg->rg_start = rgit->rg_start;
       newrg->rg_end = rgit->rg_start + size;
 
@@ -498,6 +506,8 @@ int get_free_vmrg_area(struct pcb_t *caller, int vmaid, int size, struct vm_rg_s
       if (rgit->rg_start + size < rgit->rg_end)
       {
         rgit->rg_start = rgit->rg_start + size;
+        // printf("Inside while loop of get_free_vmrg_area, inside the if block, insode the update if rgit->rg_start\n");
+        
       }
       else
       { /*Use up all space, remove current node */
@@ -507,6 +517,8 @@ int get_free_vmrg_area(struct pcb_t *caller, int vmaid, int size, struct vm_rg_s
         /*Cloning */
         if (nextrg != NULL)
         {
+          // //DEBUGPRINT
+          // printf("Inside while loop of get_free_vmrg_area, inside the if block, inside nextrg!=null\n");
           rgit->rg_start = nextrg->rg_start;
           rgit->rg_end = nextrg->rg_end;
 
@@ -520,6 +532,7 @@ int get_free_vmrg_area(struct pcb_t *caller, int vmaid, int size, struct vm_rg_s
           rgit->rg_next = NULL;
         }
       }
+      return 0;
     }
     else
     {

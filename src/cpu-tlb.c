@@ -45,11 +45,13 @@ int tlb_flush_tlb_of(struct pcb_t *proc, struct memphy_struct * mp)
  */
 int tlballoc(struct pcb_t *proc, uint32_t size, uint32_t reg_index)
 {
+  //DEBUGPRINT
+  printf("Proc %d in tlballoc\n", proc->pid);
   int addr, val;
 
   /* By default using vmaid = 0 */
   val = __alloc(proc, 0, reg_index, size, &addr);
-
+  // printf("Proc %d in tlballoc, after RAMALLOCATION\n", proc->pid);
   /* TODO update TLB CACHED frame num of the new allocated page(s)*/
   /* by using tlb_cache_read()/tlb_cache_write()*/
   int page_number = PAGING_PGN(addr);
@@ -72,6 +74,8 @@ int tlballoc(struct pcb_t *proc, uint32_t size, uint32_t reg_index)
  */
 int tlbfree_data(struct pcb_t *proc, uint32_t reg_index)
 {
+  //DEBUGPRINT
+  printf("Proc %d in tlbfree_data\n", proc->pid);
   __free(proc, 0, reg_index);
 
   /* TODO update TLB CACHED frame num of freed page(s)*/
@@ -102,6 +106,8 @@ int tlbfree_data(struct pcb_t *proc, uint32_t reg_index)
 int tlbread(struct pcb_t * proc, uint32_t source,
             uint32_t offset, 	uint32_t destination) 
 {
+  //DEBUGPRINT
+  printf("Proc %d in read\n", proc->pid);
   BYTE data, frmnum = -1;
 	
   /* TODO retrieve TLB CACHED frame num of accessing page(s)*/
@@ -141,6 +147,9 @@ int tlbread(struct pcb_t * proc, uint32_t source,
 int tlbwrite(struct pcb_t * proc, BYTE data,
              uint32_t destination, uint32_t offset)
 {
+
+  //DEBUGPRINT
+  printf("Proc %d in read\n", proc->pid);
   int val;
   BYTE frmnum = -1;
 
