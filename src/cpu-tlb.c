@@ -79,7 +79,13 @@ int tlbfree_data(struct pcb_t *proc, uint32_t reg_index)
   //DEBUGPRINT
   printf("Proc %d in tlbfree_data at register: %d \n", proc->pid, reg_index);
   __free(proc, 0, reg_index);
-
+  // PRINT OUT FREE MEMORY REGION LIST
+  struct vm_area_struct *temp = proc->mm->mmap;
+  struct vm_rg_struct *temp_rg = temp->vm_freerg_list;
+  while(temp != NULL){
+    printf("Start: %d, End: %d\n", temp_rg->rg_start, temp_rg->rg_end);
+    temp = temp->vm_next;
+  }
   /* TODO update TLB CACHED frame num of freed page(s)*/
   /* by using tlb_cache_read()/tlb_cache_write()*/
   int start_region = proc->mm->symrgtbl[reg_index].rg_start;

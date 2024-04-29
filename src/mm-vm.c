@@ -134,17 +134,17 @@ int __alloc(struct pcb_t *caller, int vmaid, int rgid, int size, int *alloc_addr
  */
 int __free(struct pcb_t *caller, int vmaid, int rgid)
 {
-  struct vm_rg_struct rgnode;
+  // struct vm_rg_struct rgnode;
 
   if(rgid < 0 || rgid > PAGING_MAX_SYMTBL_SZ)
     return -1;
 
   /* TODO: Manage the collect freed region to freerg_list */
   
-  rgnode = caller->mm->symrgtbl[rgid];
+  // rgnode = ;
   /*enlist the obsoleted memory region */
 
-  enlist_vm_freerg_list(caller->mm, &rgnode);
+  enlist_vm_freerg_list(caller->mm, &caller->mm->symrgtbl[rgid]);
   return 0;
 }
 
