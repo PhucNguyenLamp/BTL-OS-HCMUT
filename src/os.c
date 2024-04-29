@@ -48,7 +48,6 @@ struct cpu_args {
 
 
 static void * cpu_routine(void * args) {
-	
 	struct timer_id_t * timer_id = ((struct cpu_args*)args)->timer_id;
 	int id = ((struct cpu_args*)args)->id;
 	/* Check for new process in ready queue */
