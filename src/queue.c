@@ -12,6 +12,7 @@ void enqueue(struct queue_t * q, struct pcb_t * proc) {
         if (q->size == 0){
                 q->proc[0] = proc;
                 q->size++;
+                return ;
         }
         q->size++;
         q->proc[q->size-1] = proc;

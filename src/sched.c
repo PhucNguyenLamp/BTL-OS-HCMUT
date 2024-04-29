@@ -58,7 +58,7 @@ struct pcb_t * get_mlq_proc(void) {
 	int i;
 	for(i = 0; i < MAX_PRIO; i++){
 		if(mlq_ready_queue[i].size != 0 && prioSlot[i] < MAX_PRIO - i){
-			printf("Inside mlq ready queue loop %d\n", i);
+			// printf("Inside mlq ready queue loop %d\n", i);
 			//TODO: print test
 			proc = dequeue(&mlq_ready_queue[i]);
 			prioSlot[i]++;
@@ -91,13 +91,10 @@ void put_mlq_proc(struct pcb_t * proc) {
 }
 
 void add_mlq_proc(struct pcb_t * proc) {
-	//TODO: Print before mutex
-	printf("Inside add mlq proc, before mutex\n");
+	
 	pthread_mutex_lock(&queue_lock);
-	printf("Inside add mlq proc, inside mutex");
 	enqueue(&mlq_ready_queue[proc->prio], proc);
 	pthread_mutex_unlock(&queue_lock);	
-	printf("Inside add mlq proc, outside mutex");
 }
 
 struct pcb_t * get_proc(void) {
@@ -109,8 +106,6 @@ void put_proc(struct pcb_t * proc) {
 }
 
 void add_proc(struct pcb_t * proc) {
-	//TODO:
-	printf(" inside add_proc \n");
 	return add_mlq_proc(proc);
 }
 #else

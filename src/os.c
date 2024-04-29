@@ -48,8 +48,7 @@ struct cpu_args {
 
 
 static void * cpu_routine(void * args) {
-	//TODO: 
-	printf("cpu routine\n");
+	
 	struct timer_id_t * timer_id = ((struct cpu_args*)args)->timer_id;
 	int id = ((struct cpu_args*)args)->id;
 	/* Check for new process in ready queue */
@@ -61,7 +60,7 @@ static void * cpu_routine(void * args) {
 			/* No process is running, the we load new process from
 		 	* ready queue */
 			//TODO: 
-			printf("Inside while(1) at if block proc == NULL");
+			
 			proc = get_proc();
 			if (proc == NULL) {
                            next_slot(timer_id);
@@ -99,6 +98,8 @@ static void * cpu_routine(void * args) {
 		}
 		
 		/* Run current process */
+		//DEBUGPRINT:
+		printf("\nProc about to run: %d\n", proc->pid);
 		run(proc);
 		time_left--;
 		next_slot(timer_id);
@@ -127,15 +128,12 @@ static void * ld_routine(void * args) {
 		proc->prio = ld_processes.prio[i];
 #endif
 		
-		printf("%ld\n", ld_processes.start_time[i]);
-		printf("%ld\n", current_time());
-		printf("Printing before while current time()\n");
+		
 		
 		while (current_time() < ld_processes.start_time[i]) {
 			next_slot(timer_id);
 		}
-		//TODO: 
-		printf("Printing after while current time()\n");
+		
 #ifdef MM_PAGING
 		proc->mm = malloc(sizeof(struct mm_struct));
 		init_mm(proc->mm, proc);
