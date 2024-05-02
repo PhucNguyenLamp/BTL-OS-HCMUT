@@ -198,7 +198,7 @@ int vm_map_ram(struct pcb_t *caller, int astart, int aend, int mapstart, int inc
    *duplicate control mechanism, keep it simple
    */
   ret_alloc = alloc_pages_range(caller, incpgnum, &frm_lst);
-  printf("ret allocation status: %d\n", ret_alloc);
+  // printf("ret allocation status: %d\n", ret_alloc);
 
   if (ret_alloc < 0 && ret_alloc != -3000)
     return -1;

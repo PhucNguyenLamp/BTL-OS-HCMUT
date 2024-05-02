@@ -28,7 +28,7 @@ int tlb_change_all_page_tables_of(struct pcb_t *proc,  struct memphy_struct * mp
 int tlb_flush_tlb_of(struct pcb_t *proc, struct memphy_struct * mp)
 {
   /* TODO flush tlb cached*/
-  printf("Proc %d in tlbflush\n", proc->pid);
+  // printf("Proc %d in tlbflush\n", proc->pid);
   if(mp == NULL){
     return -1;
   }
@@ -46,9 +46,7 @@ int tlb_flush_tlb_of(struct pcb_t *proc, struct memphy_struct * mp)
  */
 int tlballoc(struct pcb_t *proc, uint32_t size, uint32_t reg_index)
 {
-  //DEBUGPRINT
-  printf("\n**** in Allocation ****\n");
-  printf("Proc %d in tlballoc size: %d at register: %d\n", proc->pid, size,reg_index);
+
   int addr, val;
 
   /* By default using vmaid = 0 */
@@ -78,8 +76,7 @@ int tlballoc(struct pcb_t *proc, uint32_t size, uint32_t reg_index)
  */
 int tlbfree_data(struct pcb_t *proc, uint32_t reg_index)
 {
-  //DEBUGPRINT
-  printf("Proc %d in tlbfree_data at register: %d \n", proc->pid, reg_index);
+
   __free(proc, 0, reg_index);
   // PRINT OUT FREE MEMORY REGION LIST
   // struct vm_area_struct *temp = proc->mm->mmap;
@@ -116,9 +113,7 @@ int tlbfree_data(struct pcb_t *proc, uint32_t reg_index)
 int tlbread(struct pcb_t * proc, uint32_t source,
             uint32_t offset, 	uint32_t destination) 
 {
-  //DEBUGPRINT
-  printf("Proc %d in read. Source: %d, offset: %d, destination: %d\n", proc->pid, source, offset, destination);
-  BYTE data, frmnum = -1;
+ BYTE data, frmnum = -1;
 	
   /* TODO retrieve TLB CACHED frame num of accessing page(s)*/
   /* by using tlb_cache_read()/tlb_cache_write()*/
@@ -142,11 +137,9 @@ int tlbread(struct pcb_t * proc, uint32_t source,
 #endif
 
   int val = __read(proc, 0, source, offset, &data);
-  printf("Data retrieve in tlbread: %d\n", data);
   // destination = (uint32_t) data;
   int val2 = __write(proc, 0, destination, 0, data);
-  int start_region2 = proc->mm->symrgtbl[destination].rg_start + 0;
-  printf("Checking proc->mram->storage[%d] of register %d: %d\n",start_region2,destination,proc->mram->storage[start_region2]);
+  // int start_region2 = proc->mm->symrgtbl[destination].rg_start + 0;
   
   
 
@@ -163,8 +156,6 @@ int tlbwrite(struct pcb_t * proc, BYTE data,
              uint32_t destination, uint32_t offset)
 {
 
-  //DEBUGPRINT
-  printf("Proc %d in write. Data: %d, destination: %d, offset %d\n", proc->pid, data, destination, offset);
   int val;
   BYTE frmnum = -1;
 
@@ -192,7 +183,6 @@ int tlbwrite(struct pcb_t * proc, BYTE data,
 #endif
 
   val = __write(proc, 0, destination, offset, data);
-  printf("Checking proc->mram->storage[%d] of register %d: %d\n",start_region,destination,proc->mram->storage[start_region]);
 
   /* TODO update TLB CACHED with frame num of recent accessing page(s)*/
   /* by using tlb_cache_read()/tlb_cache_write()*/
