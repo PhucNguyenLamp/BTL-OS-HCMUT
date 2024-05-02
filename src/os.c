@@ -116,6 +116,10 @@ static void * ld_routine(void * args) {
 	struct timer_id_t * timer_id = (struct timer_id_t*)args;
 #endif
 	int i = 0;
+	// int k = 0;
+	// while(k < num_processes){
+	// 	printf("Proc name: %s\n", ld_processes.path[k]);
+	// }
 		
 	printf("ld_routine\n");
 	while (i < num_processes) {

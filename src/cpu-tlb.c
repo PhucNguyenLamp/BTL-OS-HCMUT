@@ -47,7 +47,8 @@ int tlb_flush_tlb_of(struct pcb_t *proc, struct memphy_struct * mp)
 int tlballoc(struct pcb_t *proc, uint32_t size, uint32_t reg_index)
 {
   //DEBUGPRINT
-   printf("Proc %d in tlballoc size: %d at register: %d\n", proc->pid, size,reg_index);
+  printf("\n**** in Allocation ****\n");
+  printf("Proc %d in tlballoc size: %d at register: %d\n", proc->pid, size,reg_index);
   int addr, val;
 
   /* By default using vmaid = 0 */

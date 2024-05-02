@@ -47,7 +47,7 @@ int init_pte(uint32_t *pte,
  * pte_set_swap - Set PTE entry for swapped page
  * @pte    : target page table entry (PTE)
  * @swptyp : swap type
- * @swpoff : swap offset
+ * @swpoff : swap ofSfset
  */
 int pte_set_swap(uint32_t *pte, int swptyp, int swpoff)
 {
