@@ -47,7 +47,7 @@ int init_pte(uint32_t *pte,
  * pte_set_swap - Set PTE entry for swapped page
  * @pte    : target page table entry (PTE)
  * @swptyp : swap type
- * @swpoff : swap offset
+ * @swpoff : swap ofSfset
  */
 int pte_set_swap(uint32_t *pte, int swptyp, int swpoff)
 {
@@ -198,7 +198,7 @@ int vm_map_ram(struct pcb_t *caller, int astart, int aend, int mapstart, int inc
    *duplicate control mechanism, keep it simple
    */
   ret_alloc = alloc_pages_range(caller, incpgnum, &frm_lst);
-  printf("ret allocation status: %d\n", ret_alloc);
+  // printf("ret allocation status: %d\n", ret_alloc);
 
   if (ret_alloc < 0 && ret_alloc != -3000)
     return -1;

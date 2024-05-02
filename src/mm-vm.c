@@ -81,10 +81,12 @@ struct vm_rg_struct *get_symrg_byid(struct mm_struct *mm, int rgid)
 int __alloc(struct pcb_t *caller, int vmaid, int rgid, int size, int *alloc_addr)
 {
   /*Allocate at the toproof */
+
   struct vm_rg_struct rgnode;
   // printf("Proc %d in __alloc, before get_free_vmrg_area\n", caller->pid);
   if (get_free_vmrg_area(caller, vmaid, size, &rgnode) == 0)
   {
+ 
     caller->mm->symrgtbl[rgid].rg_start = rgnode.rg_start;
     caller->mm->symrgtbl[rgid].rg_end = rgnode.rg_end;
 
@@ -94,7 +96,7 @@ int __alloc(struct pcb_t *caller, int vmaid, int rgid, int size, int *alloc_addr
   }
 
   /* TODO get_free_vmrg_area FAILED handle the region management (Fig.6)*/
-
+  
   /*Attempt to increate limit to get space */
   struct vm_area_struct *cur_vma = get_vma_by_num(caller->mm, vmaid);
   int inc_sz = PAGING_PAGE_ALIGNSZ(size);
@@ -195,17 +197,14 @@ int pg_getpage(struct mm_struct *mm, int pgn, int *fpn, struct pcb_t *caller)
     int vicfpn;
     uint32_t vicpte;
 
-    int tgtfpn = GETVAL(pte, PAGING_PTE_FPN_MASK,PAGING_PTE_FPN_LOBIT);//the target frame storing our variable
-
+    int tgtfpn = GETVAL(pte, PAGING_PTE_SWPOFF_MASK,PAGING_PTE_SWPOFF_LOBIT);//the target frame storing our variable
     /* TODO: Play with your paging theory here */
     /* Find victim page */
     find_victim_page(caller->mm, &vicpgn);
     vicpte = mm->pgd[vicpgn];
     vicfpn = GETVAL(vicpte, PAGING_PTE_FPN_MASK,PAGING_PTE_FPN_LOBIT);
-
     /* Get free frame in MEMSWP */
     MEMPHY_get_freefp(caller->active_mswp, &swpfpn);
-
     /* Do swap frame from MEMRAM to MEMSWP and vice versa*/
     /* Copy victim frame to swap */
     __swap_cp_page(caller->mram, vicfpn, caller->active_mswp, swpfpn);
@@ -213,18 +212,19 @@ int pg_getpage(struct mm_struct *mm, int pgn, int *fpn, struct pcb_t *caller)
     __swap_cp_page(caller->active_mswp, tgtfpn, caller->mram, vicfpn);
 
     MEMPHY_put_freefp(caller->active_mswp, tgtfpn); 
-
     /* Update page table */
     pte_set_swap(&mm->pgd[vicpgn], 0, swpfpn);
-
     /* Update its online status of the target page */
-    pte_set_fpn(&mm->pgd[pgn], tgtfpn);
+    pte_set_fpn(&mm->pgd[pgn], vicfpn);
 
 #ifdef CPU_TLB
     /* Update its online status of TLB (if needed) */ 
 #endif
 
     enlist_pgn_node(&caller->mm->fifo_pgn,pgn);
+
+    *fpn = tgtfpn;
+    return 0;
   }
   // *fpn = PAGING_FPN(pte);
   *fpn = GETVAL(pte, PAGING_PTE_FPN_MASK,PAGING_PTE_FPN_LOBIT);
@@ -247,6 +247,8 @@ int pg_getval(struct mm_struct *mm, int addr, BYTE *data, struct pcb_t *caller)
   /* Get the page to MEMRAM, swap from MEMSWAP if needed */
   if(pg_getpage(mm, pgn, &fpn, caller) != 0) 
     return -1; /* invalid page access */
+
+
 
   int phyaddr = (fpn << PAGING_ADDR_FPN_LOBIT) + off;
 
