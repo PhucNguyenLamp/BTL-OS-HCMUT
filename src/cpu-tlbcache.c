@@ -76,7 +76,7 @@ int tlb_cache_write(struct pcb_t* proc, struct memphy_struct *mp, int pid, int p
       tlb_flush_tlb_of(proc, mp);
       //* update pid hold
       mp->pid_hold = pid;
-      return 0;
+      // return 0;
    }
    uint32_t address = (uint32_t)pgnum % mp->maxsz;
    mp->storage[address] = value;
@@ -94,10 +94,8 @@ int TLBMEMPHY_read(struct memphy_struct * mp, int addr, BYTE *value)
 {
    if (mp == NULL)
      return -1;
-
    /* TLB cached is random access by native */
    *value = mp->storage[addr];
-
    return 0;
 }
 
