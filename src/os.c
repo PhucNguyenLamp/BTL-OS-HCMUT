@@ -60,9 +60,12 @@ static void * cpu_routine(void * args) {
 		 	* ready queue */			
 			proc = get_proc();
 			if (proc == NULL) {
-                           next_slot(timer_id);
+                          
+						   next_slot(timer_id);
                            continue; /* First load failed. skip dummy load */
+						   
                         }
+			
 		}else if (proc->pc == proc->code->size) {
 			/* The porcess has finish it job */
 			printf("\tCPU %d: Processed %2d has finished\n",
@@ -142,6 +145,7 @@ static void * ld_routine(void * args) {
 		proc->active_mswp = active_mswp;
 		proc->tlb = tlb;
 #endif
+		
 		printf("\tLoaded a process at %s, PID: %d PRIO: %ld\n",
 			ld_processes.path[i], proc->pid, ld_processes.prio[i]);
 		add_proc(proc);

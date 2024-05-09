@@ -113,7 +113,6 @@ int vmap_page_range(struct pcb_t *caller, // process call
     // printf("Inide while loop of vmap_page_range: fpn: %d\n", fpn);
     caller->mm->pgd[pgn + pgit] = 0;
     pte_set_fpn(&caller->mm->pgd[pgn+pgit], fpn);
-    
     //* set pte bit present = 1.
     enlist_pgn_node(&caller->mm->fifo_pgn, pgn+pgit);
     //* contains used frame number.
@@ -209,31 +208,8 @@ int vm_map_ram(struct pcb_t *caller, int astart, int aend, int mapstart, int inc
 #ifdef MMDBG
      printf("OOM: vm_map_ram out of memory \n");
 #endif
-    int i = 0;
-    while(i < incpgnum){
-      int vicpgn, swpfpn;
-      int vicfpn;
-      uint32_t vicpte;
-      find_victim_page(caller->mm, &vicpgn);
-      
-      vicpte = caller->mm->pgd[vicpgn];
-      vicfpn = GETVAL(vicpte, PAGING_PTE_FPN_MASK,PAGING_PTE_FPN_LOBIT);
-
-      MEMPHY_get_freefp(caller->active_mswp, &swpfpn);
-      __swap_cp_page(caller->mram, vicfpn, caller->active_mswp, swpfpn);
-
-      pte_set_swap(&caller->mm->pgd[vicpgn], 0, swpfpn);
-      
-
-      MEMPHY_put_freefp(caller->mram, vicfpn);
-      printf("alloc pages range in ret_alloc -3000\n");
-      printf("incpgnum: %d\n", incpgnum);
-      i++;
-    }
+    return -1;
     
-    
-    ret_alloc = alloc_pages_range(caller, incpgnum, &frm_lst);
-
   }
 
   /* it leaves the case of memory is enough but half in ram, half in swap

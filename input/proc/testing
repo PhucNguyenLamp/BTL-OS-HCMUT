@@ -1,0 +1,6 @@
+0 4
+alloc 256 0
+alloc 256 1
+alloc 256 2
+write 100 0 20
+read 0 20 2

@@ -4,6 +4,7 @@
 #include "mm.h"
 #include <stdio.h>
 int calc(struct pcb_t * proc) {
+	printf("Proc %d in CALC data\n", proc->pid);
 	return ((unsigned long)proc & 0UL);
 }
 

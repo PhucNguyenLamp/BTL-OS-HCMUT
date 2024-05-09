@@ -86,12 +86,10 @@ int __alloc(struct pcb_t *caller, int vmaid, int rgid, int size, int *alloc_addr
   // printf("Proc %d in __alloc, before get_free_vmrg_area\n", caller->pid);
   if (get_free_vmrg_area(caller, vmaid, size, &rgnode) == 0)
   {
- 
+     
     caller->mm->symrgtbl[rgid].rg_start = rgnode.rg_start;
     caller->mm->symrgtbl[rgid].rg_end = rgnode.rg_end;
-
     *alloc_addr = rgnode.rg_start;
-
     return 0;
   }
 
@@ -104,27 +102,38 @@ int __alloc(struct pcb_t *caller, int vmaid, int rgid, int size, int *alloc_addr
   
   int old_sbrk ;
   old_sbrk = cur_vma->sbrk;
+  printf("old_sbrk: %d\n", old_sbrk);
+ 
 
   /* TODO INCREASE THE LIMIT
    * inc_vma_limit(caller, vmaid, inc_sz)
    */
   
-  inc_vma_limit(caller, vmaid, inc_sz);
- 
-  // update vm_freerg_list
-  if(inc_sz > size){
-    struct vm_rg_struct *rgnode = malloc(sizeof(struct vm_rg_struct));
-    rgnode->rg_start = size + old_sbrk + 1; 
-    rgnode->rg_end = inc_sz + old_sbrk;
-    enlist_vm_freerg_list(caller->mm, rgnode);
+  if(!inc_vma_limit(caller, vmaid, inc_sz)){
+    
+    // update vm_freerg_list
+    if(inc_sz > size){
+      struct vm_rg_struct *rgnode = malloc(sizeof(struct vm_rg_struct));
+      rgnode->rg_start = size + old_sbrk + 1; 
+      rgnode->rg_end = inc_sz + old_sbrk;
+      enlist_vm_freerg_list(caller->mm, rgnode);
+    }
+    cur_vma->sbrk += inc_sz;
+    // printf("########## sbrk: %ld\n", cur_vma->sbrk);
+    /*Successful increase limit */
+    caller->mm->symrgtbl[rgid].rg_start = old_sbrk;
+    caller->mm->symrgtbl[rgid].rg_end = old_sbrk + size;
+    *alloc_addr = old_sbrk;
+    printf("alloc_addr: %d\n", *alloc_addr);
   }
-  cur_vma->sbrk += inc_sz;
-  // printf("########## sbrk: %ld\n", cur_vma->sbrk);
-  /*Successful increase limit */
-  caller->mm->symrgtbl[rgid].rg_start = old_sbrk;
-  caller->mm->symrgtbl[rgid].rg_end = old_sbrk + size;
   
-  *alloc_addr = old_sbrk;
+
+
+
+
+  
+ 
+  
 
   return 0;
 }
@@ -142,6 +151,8 @@ int __free(struct pcb_t *caller, int vmaid, int rgid)
 
   if(rgid < 0 || rgid > PAGING_MAX_SYMTBL_SZ)
     return -1;
+  
+ 
 
   /* TODO: Manage the collect freed region to freerg_list */
   
@@ -210,12 +221,12 @@ int pg_getpage(struct mm_struct *mm, int pgn, int *fpn, struct pcb_t *caller)
     __swap_cp_page(caller->mram, vicfpn, caller->active_mswp, swpfpn);
     /* Copy target frame from swap to mem */
     __swap_cp_page(caller->active_mswp, tgtfpn, caller->mram, vicfpn);
-
     MEMPHY_put_freefp(caller->active_mswp, tgtfpn); 
     /* Update page table */
     pte_set_swap(&mm->pgd[vicpgn], 0, swpfpn);
     /* Update its online status of the target page */
     pte_set_fpn(&mm->pgd[pgn], vicfpn);
+
 
 #ifdef CPU_TLB
     /* Update its online status of TLB (if needed) */ 
@@ -277,6 +288,7 @@ int pg_setval(struct mm_struct *mm, int addr, BYTE value, struct pcb_t *caller)
   printf("Inside pg_setval, fpn: %d, phyaddr: %u\n", fpn, phyaddr);
 
   MEMPHY_write(caller->mram,phyaddr, value);
+  printf("The value of RAM at address %d is: %d", phyaddr, caller->mram->storage[phyaddr]);
 
    return 0;
 }
@@ -342,7 +354,7 @@ int __write(struct pcb_t *caller, int vmaid, int rgid, int offset, BYTE value)
   
   if(currg == NULL || cur_vma == NULL) /* Invalid memory identify */
 	  return -1;
-
+  printf("Rgid: %d\n", rgid);
   pg_setval(caller->mm, currg->rg_start + offset, value, caller);
 
   return 0;
@@ -397,7 +409,7 @@ int free_pcb_memph(struct pcb_t *caller)
  *@caller: caller
  *@vmaid: ID vm area to alloc memory region
  *@incpgnum: number of page
- *@vmastart: vma end
+ *@vmastart: vma en d
  *@vmaend: vma end
  *
  */

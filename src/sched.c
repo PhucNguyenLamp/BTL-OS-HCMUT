@@ -1,4 +1,3 @@
-
 #include "queue.h"
 #include "sched.h"
 #include <pthread.h>
@@ -9,6 +8,12 @@ static struct queue_t ready_queue;
 static struct queue_t run_queue;
 static pthread_mutex_t queue_lock;
 int prioSlot[MAX_PRIO];
+
+
+int MarkedPrior = 0 ;
+int flag = 1;
+int count = 0;
+
 
 #ifdef MLQ_SCHED
 static struct queue_t mlq_ready_queue[MAX_PRIO];
@@ -48,41 +53,53 @@ void init_scheduler(void) {
  *  State representation   prio = 0 .. MAX_PRIO, curr_slot = 0..(MAX_PRIO - prio)
  */
 struct pcb_t * get_mlq_proc(void) {
-
 	struct pcb_t * proc = NULL;
 	/*TODO: get a process from PRIORITY [ready_queue].
 	 * Remember to use lock to protect the queue.
 	 */
 	pthread_mutex_lock(&queue_lock);
-	
-	int i;
-	for(i = 0; i < MAX_PRIO; i++){
-		if(mlq_ready_queue[i].size != 0 && prioSlot[i] < MAX_PRIO - i){
-			// printf("Inside mlq ready queue loop %d\n", i);
-			//TODO: print test
-			proc = dequeue(&mlq_ready_queue[i]);
-			prioSlot[i]++;
-			break;
+	label: 
+	if(flag){
+		for(; MarkedPrior < MAX_PRIO; MarkedPrior++){
+			if(mlq_ready_queue[MarkedPrior].size != 0 && prioSlot[MarkedPrior] < MAX_PRIO - MarkedPrior){
+				proc = dequeue(&mlq_ready_queue[MarkedPrior]);
+				prioSlot[MarkedPrior]++;
+				flag = 0;
+				count = 0;
+				pthread_mutex_unlock(&queue_lock);
+				return proc;
+			}
+			count++;
 		}
-	}
-	
-	if ( i == MAX_PRIO){
-		//* reset all time prirSlot
 		for(int j = 0; j < MAX_PRIO; j++){
 			prioSlot[j] = 0;
 		}
-		//* Run again the above for loop code, dequeue
-		for(int k = 0; k < MAX_PRIO; k++){
-			if(mlq_ready_queue[k].size != 0 && prioSlot[k] < MAX_PRIO - k){
-				proc = dequeue(&mlq_ready_queue[k]);
-				prioSlot[k] ++;
-				break;
-			}
+		MarkedPrior = 0;
+		flag = 1;
+		if(count == MAX_PRIO){
+			pthread_mutex_unlock(&queue_lock);
+			return proc;
+		}else{
+			count = 0;
+		}
+		printf("yoyo\n");
+		goto label;
+	}else{
+		if(prioSlot[MarkedPrior] < MAX_PRIO - MarkedPrior && mlq_ready_queue[MarkedPrior].size != 0 ){
+			printf("Inside priorSlot, second if block\n");
+			proc = dequeue(&mlq_ready_queue[MarkedPrior]);
+			prioSlot[MarkedPrior]++;
+			pthread_mutex_unlock(&queue_lock);
+			return proc;
+		}else{
+			flag = 1;
+			goto label;
 		}
 	}
 	pthread_mutex_unlock(&queue_lock);
 	return proc;	
 }
+
 
 void put_mlq_proc(struct pcb_t * proc) {
 	pthread_mutex_lock(&queue_lock);
